@@ -180,8 +180,7 @@ public class ReadWithJaunt {
                 }
                 //add the specific mathcn to list                
                 matchList.add(new Match(homeTeam, awayTeam, finalScore, matchCode));                
-            }//end of match check
-                                                       
+            }//end of match check                          
         }                               
         return matchList;
     }    
