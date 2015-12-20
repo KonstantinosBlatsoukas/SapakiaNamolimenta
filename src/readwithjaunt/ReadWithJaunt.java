@@ -8,6 +8,7 @@ import dataModel.Euroleague;
 import dataModel.Match;
 import dataModel.Player;
 import dataModel.Team;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -27,16 +28,18 @@ public class ReadWithJaunt {
     public static Map<String,String> readWPlayers;    
     public static ArrayList<Team> teams;
     public static ArrayList<Match> matches;    
-    public static void main(String[] args) throws IOException {
+    
+    public static void main (String[] args) throws IOException {
         //select season and initialize teams/season
-        //ReadTeams readWebTeams=new ReadTeams("E2015");            
+        ReadTeams readWebTeams=new ReadTeams("E2015");            
         //initialize  Euroleague                           
-        //Euroleague leaugue=new Euroleague(initTeams(readWebTeams));        
+        Euroleague euro=new Euroleague(initTeams(readWebTeams));        
         //serialize Euroleague object (e.g. save data object to disk)
-        //serializeEuroleagueObject(leaugue);         
-        Euroleague euro=deSerializeEuroleagueObject();
+        serializeEuroleagueObject(euro);         
+        
+        //Euroleague euro=deSerializeEuroleagueObject();
         //iterate through all teams
-        for(int currentTeam=0;currentTeam<euro.getEuroleagueTeams().size();currentTeam++){            
+        for (int currentTeam = 0; currentTeam < euro.getEuroleagueTeams().size(); currentTeam++) {            
             //print current team
             System.out.println();            
             System.out.println(euro.getEuroleagueTeams().get(currentTeam).getTeamName());            
@@ -46,8 +49,8 @@ public class ReadWithJaunt {
             StringBuilder sb=new StringBuilder();
             
             for(int teamIt=0;teamIt<team.getMatches().size();teamIt++){
-                    String matchCode=team.getMatches().get(teamIt).getMatchCode();
-                    sb.append(team.getMatches().get(teamIt).getMatch()+"\t\t");                           
+                String matchCode=team.getMatches().get(teamIt).getMatchCode();
+                sb.append(team.getMatches().get(teamIt).getMatch()+"\t\t");                           
             }       
             System.out.format("%s", sb);
             
@@ -92,19 +95,22 @@ public class ReadWithJaunt {
      }
     //save data to disk (e.g. serialize object to disk)
     public static void serializeEuroleagueObject(Euroleague leaugue){
-      try
-      {
-         FileOutputStream fileOut =new FileOutputStream("C:\\myObject\\euroleague.ser");
-         ObjectOutputStream out = new ObjectOutputStream(fileOut);
-         out.writeObject(leaugue);
-         out.close();
-         fileOut.close();
-         System.out.printf("Serialized data is saved in C:\\myObject\\euroleague.ser");
-      }catch(IOException i)
-      {
-          i.printStackTrace();
-      }
-        
+        try {
+            File yourFile = new File("C:\\myObject\\euroleague.ser");
+            if (!yourFile.exists()) {
+                yourFile.getParentFile().mkdirs();
+                yourFile.createNewFile();
+            }
+            FileOutputStream fileOut = new FileOutputStream(yourFile, false);
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(leaugue);
+            out.close();
+            fileOut.close();
+            System.out.printf("Serialized data is saved in C:\\myObject\\euroleague.ser");
+        } catch(IOException i) {
+            System.out.println("Error occurred while serializing the object on the system!");
+            i.printStackTrace();
+        }
     }
     //initializes all euroleuge teams    
     public static ArrayList<Team> initTeams(ReadTeams readTeam) throws IOException{        
