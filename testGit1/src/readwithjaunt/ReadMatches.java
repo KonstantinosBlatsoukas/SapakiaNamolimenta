@@ -13,6 +13,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlSpan;
 import com.gargoylesoftware.htmlunit.html.HtmlTableBody;
 import com.gargoylesoftware.htmlunit.html.HtmlTableDataCell;
+import java.util.ArrayList;
 import java.util.HashMap;
 /**
  *
@@ -22,17 +23,17 @@ public class ReadMatches {
     
     private String season;
     private String gameCode;
-    private Map<String,String> matchMap;
+    private ArrayList<ArrayList<String>> matchArr;
+    //private Map<String,String> matchMap;
     
     public ReadMatches(String gameCode,String season){
         this.season=season;
         this.gameCode=gameCode;
-        matchMap=new HashMap<String,String>();
+        matchArr=new ArrayList<ArrayList<String>>();
     }
     
-    public Map<String,String> getCodeMatches() throws IOException{
-        //data structure initialization 
-        //teams=new HashMap<String,String>();
+    public ArrayList<ArrayList<String>> getCodeMatches() throws IOException{
+        //data structure initialization         
         try (final WebClient webClient = new WebClient(BrowserVersion.CHROME)) {                        
     
          webClient.getOptions().setThrowExceptionOnScriptError(false);
@@ -48,12 +49,14 @@ public class ReadMatches {
             
             //iterate through mathces
             int mathcesCount=teamTable.getChildNodes().size();
+             int currMatch=0;
             for(int i=0;i<mathcesCount;i++){                                                  
                 //get specific data for each match
                 String codeGame=new String();
                 String matchDetails=new String();
                 String opponent=new String();
                 String FT=new String();
+               
                 for(int j=1;j<teamTable.getChildNodes().get(i).getChildNodes().size()-1;j++){                    
                     
                     if(!teamTable.getChildNodes().get(i).getChildNodes().isEmpty()){                        
@@ -105,12 +108,18 @@ public class ReadMatches {
                         }                                                
                     } 
                 }                             
-                matchMap.put(codeGame, opponent+" : "+FT);
+                //matchMap.put(codeGame, opponent+" : "+FT);
+                matchArr.add(new ArrayList<String>());
+                matchArr.get(currMatch).add(codeGame);
+                matchArr.get(currMatch).add(opponent+" : "+FT);
+                
+                currMatch++;
             }             
-                        
+            matchArr.remove(currMatch-1);
+            
          }                  
         }  
-        return matchMap;
+        return matchArr;
     }
         
 }

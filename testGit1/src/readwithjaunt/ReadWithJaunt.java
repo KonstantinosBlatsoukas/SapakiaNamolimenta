@@ -10,10 +10,13 @@ import dataModel.Player;
 import dataModel.Team;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,25 +28,26 @@ import java.util.Map;
 public class ReadWithJaunt {
     //variable that stores team name and team code
     public static Map<String,String> readWteams;
-    public static Map<String,String> readWMatches;
+    public static ArrayList<ArrayList<String>> readWMatches;
     public static Map<String,String> readWPlayers;    
     public static ArrayList<Team> teams;
     public static ArrayList<Match> matches;    
     
     public static void main (String[] args) throws IOException {
-        //select season and initialize teams/season
-        //ReadTeams readWebTeams=new ReadTeams("E2015");            
-        //initialize  Euroleague                           
-        //Euroleague euro=new Euroleague(initTeams(readWebTeams));        
-        //serialize Euroleague object (e.g. save data object to disk)
-        //serializeEuroleagueObject(euro);         
-        
+//        //select season and initialize teams/season
+//        ReadTeams readWebTeams=new ReadTeams("E2015");            
+//        //initialize  Euroleague                           
+//        Euroleague euro=new Euroleague(initTeams(readWebTeams));        
+//        //serialize Euroleague object (e.g. save data object to disk)
+//        serializeEuroleagueObject(euro);                 
         Euroleague euro=deSerializeEuroleagueObject();
-        //iterate through all teams
-        for (int currentTeam = 0; currentTeam < euro.getEuroleagueTeams().size(); currentTeam++) {            
-            //print current team            
-            System.out.println();
-            System.out.println(euro.getEuroleagueTeams().get(currentTeam).getTeamName());            
+        //iterate through all teams and write results into files
+        writeDataToFiles(euro);        
+    }
+    //write processed data to files
+    public static void writeDataToFiles(Euroleague euro) throws FileNotFoundException, UnsupportedEncodingException{
+        for (int currentTeam = 0; currentTeam < euro.getEuroleagueTeams().size(); currentTeam++) {                        
+            PrintWriter writer = new PrintWriter("C:\\Euro\\"+euro.getEuroleagueTeams().get(currentTeam).getTeamName()+".txt", "UTF-8");            
             Team team=euro.getEuroleagueTeams().get(currentTeam);                        
             //get players of the team
             ArrayList<Player> players=team.getTeamPlayers();     
@@ -54,16 +58,14 @@ public class ReadWithJaunt {
             //get team matches in one line                        
             StringBuilder teamMathcesString=getTeamMatches(teamMatches,getEmptyStr(maxPlrLen));    
             //print all team matches
-            System.out.println(teamMathcesString);
+            writer.println(teamMathcesString);
             //iterate through team players
-            for(int currentPlayer=0;currentPlayer<players.size();currentPlayer++){                     
-                
-                getPlrStsPerGame(teamMatches.size(),currentPlayer, teamMatches, players,maxPlrLen);
-                    
-            }                                              
+            for(int currentPlayer=0;currentPlayer<players.size();currentPlayer++){                                                                     
+                writer.println(getPlrStsPerGame(teamMatches.size(),currentPlayer, teamMatches, players,maxPlrLen));
+            }            
+            writer.close();
         }
-    }
-                
+    }                
     //get player stats for all mathces in one lines
     public static StringBuilder getPlrStsPerGame(int numOfMatches, int currentPlayer, ArrayList<Match> mathces, ArrayList<Player> players, int maxPlrLen){                                                
         
@@ -77,26 +79,21 @@ public class ReadWithJaunt {
             playerStats.append(players.get(currentPlayer).getPlayerName());
         }                
         //iterate through team matches    
-        StringBuilder spaces=new StringBuilder();
         for(int teamIt=0;teamIt< numOfMatches;teamIt++){
-            String matchCode=mathces.get(teamIt).getMatchCode();
-            String match=mathces.get(teamIt).getMatch();                                            
+            String matchCode=mathces.get(teamIt).getMatchCode();                        
             //check if player played at the specific match
-            if(players.get(currentPlayer).getMatchCodeNStats().containsKey(matchCode)){                                                          
-                
-                playerStats.append(spaces+players.get(currentPlayer).getMatchCodeNStats().get(matchCode).split("::")[0]+" ");
+            if(players.get(currentPlayer).getMatchCodeNStats().containsKey(matchCode)){                                                                          
+                playerStats.append(players.get(currentPlayer).getMatchCodeNStats().get(matchCode).split("::")[0]+"  ");
                 playerStats.append(players.get(currentPlayer).getMatchCodeNStats().get(matchCode).split("::")[1]);                
                 playerStats.append(getEmptyStr(mathces.get(teamIt).getMatch().length()-players.get(currentPlayer).getMatchCodeNStats().get(matchCode).length()));
             }
             else{
                 playerStats.append("Not played");                            
                 playerStats.append(getEmptyStr(mathces.get(teamIt).getMatch().length()-new String("Not played").length()));
-            }
-            spaces.append(" ");
-            
-        } //end matches iteration    
-        System.out.println(playerStats);
-        return null;
+            }            
+            playerStats.append(" ");                                       
+        } //end matches iteration                                        
+        return playerStats;
     }    
     //return team matches in one line 
     public static StringBuilder getTeamMatches(ArrayList<Match> teamMatches, StringBuilder gap){                
@@ -182,7 +179,7 @@ public class ReadWithJaunt {
             String seasonCode = "E2015";
             //get team matches
             //match per team/season (team code/ season code)            
-            ReadMatches matches=new ReadMatches(teamCode,"E2015");
+            ReadMatches matches=new ReadMatches(teamCode,seasonCode);                                   
             ArrayList<Match> teamMatches=initMatchesPerTeams(teamName,matches);
             //get team players                                    
             ArrayList<Player> teamPlayers=initPlayersPerTeam(teamCode,"E2015");            
@@ -219,28 +216,28 @@ public class ReadWithJaunt {
         readWMatches=matches.getCodeMatches();
         //initialize match object and matches array list
         ArrayList<Match> matchList=new ArrayList<Match>();
-        for (Map.Entry<String,String> entry:readWMatches.entrySet()) {
-            
-            if( isMatchPlayed( entry.getKey(), entry.getValue()) ){                                
-                String matchCode = entry.getKey();
-                String finalScore = entry.getValue().split(":")[1].trim();                
+        
+        for(int i=readWMatches.size()-1;i>=0;i--){
+            if( isMatchPlayed( readWMatches.get(i).get(0), readWMatches.get(i).get(1)) ){                                
+                String matchCode = readWMatches.get(i).get(0);
+                String finalScore = readWMatches.get(i).get(1).split(":")[1].trim();                
                 //check if match is home or away
                 String awayTeam;
                 String homeTeam;
-                if(entry.getValue().substring(0, 2).equals("at")){
+                if(readWMatches.get(i).get(1).substring(0, 2).equals("at")){
                     //away                    
-                    homeTeam = entry.getValue().split(":")[0].substring(3, entry.getValue().split(":")[0].length());
+                    homeTeam = readWMatches.get(i).get(1).split(":")[0].substring(3, readWMatches.get(i).get(1).split(":")[0].length());
                     awayTeam = teamName;
                 }
                 else{
                     //home
-                    awayTeam = entry.getValue().split(":")[0].substring(3, entry.getValue().split(":")[0].length());
+                    awayTeam = readWMatches.get(i).get(1).split(":")[0].substring(3, readWMatches.get(i).get(1).split(":")[0].length());
                     homeTeam = teamName;
                 }
                 //add the specific mathcn to list                
                 matchList.add(new Match(homeTeam, awayTeam, finalScore, matchCode));                
-            }//end of match check                          
-        }                               
+            }//end of match check                            
+        }                                                                     
         return matchList;
     }    
     //method that check if a specific match is played or not
