@@ -34,15 +34,26 @@ public class ReadWithJaunt {
     public static ArrayList<Match> matches;    
     
     public static void main (String[] args) throws IOException {
-//        //select season and initialize teams/season
-//        ReadTeams readWebTeams=new ReadTeams("E2015");            
-//        //initialize  Euroleague                           
-//        Euroleague euro=new Euroleague(initTeams(readWebTeams));        
-//        //serialize Euroleague object (e.g. save data object to disk)
-//        serializeEuroleagueObject(euro);                 
+        //data update and Euroleague object serialization
+        dataUpdate("E2015");
+        //Euroleague object deserialization and write data to files                                             
+        writeData();                        
+    }    
+    //write data to files and deserialization 
+    public static void writeData() throws FileNotFoundException, UnsupportedEncodingException{
         Euroleague euro=deSerializeEuroleagueObject();
         //iterate through all teams and write results into files
-        writeDataToFiles(euro);        
+        writeDataToFiles(euro);
+    }
+    //data update and object serilization
+    public static void dataUpdate(String season) throws IOException{
+        System.out.println("updating...");
+        //select season and initialize teams/season
+        ReadTeams readWebTeams=new ReadTeams(season);            
+        //initialize  Euroleague                           
+        Euroleague euro=new Euroleague(initTeams(readWebTeams));        
+        //serialize Euroleague object (e.g. save data object to disk)
+        serializeEuroleagueObject(euro);    
     }
     //write processed data to files
     public static void writeDataToFiles(Euroleague euro) throws FileNotFoundException, UnsupportedEncodingException{
@@ -65,6 +76,7 @@ public class ReadWithJaunt {
             }            
             writer.close();
         }
+        System.out.println("Data saved in C:\\Euro\\ !");
     }                
     //get player stats for all mathces in one lines
     public static StringBuilder getPlrStsPerGame(int numOfMatches, int currentPlayer, ArrayList<Match> mathces, ArrayList<Player> players, int maxPlrLen){                                                
@@ -170,6 +182,9 @@ public class ReadWithJaunt {
         
         teams=new ArrayList<Team>();
         //iterate through all season teams
+        int updateProgress=0;
+        System.out.println();
+        System.out.println("Wait for 24 dashes in order update to complete:");
         for (Map.Entry<String,String> entry:readWteams.entrySet()) {                                                
             //get team name
             String teamName = entry.getKey();
@@ -190,8 +205,13 @@ public class ReadWithJaunt {
             //@param4 : matches that team played
             //@param5 : current team players
             teams.add(new Team(teamName, teamCode, seasonCode, teamMatches, teamPlayers) );
+            updateProgress+=4;
+            System.out.format("#");
                        
         }
+        System.out.println();
+        System.out.println("Update completed!");
+        System.out.println();
         return teams; 
     }    
     //method that returns team players    
